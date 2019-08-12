@@ -1,0 +1,70 @@
+html, body {
+width: 100%;
+height: 100%;
+padding: 0;
+margin:0;
+overflow: hidden;
+}
+
+world {
+    display: block;
+    width: 100%; 
+    height: 100%;
+}
+
+[xywh] {
+    display: block;
+    position:absolute;
+    min-width: 10px;
+    min-height: 10px;
+}
+
+platform {
+    border-radius: 10px;
+    border: 2px solid black;
+}
+
+player {
+    background: cyan;
+}
+
+/* custom styles */
+
+world {
+    background: linear-gradient(to bottom, skyblue, white);
+}
+
+platform {
+    background: linear-gradient(to bottom, #0FE207 10px, #DEAF5F 20px, #DEAF5F);
+}
+
+player {
+    box-sizing: border-box;
+    background: transparent;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+player[dir=left][action=standing] {
+    background-image: url("mario-left.png");
+}
+player[dir=right][action=standing] {
+    background-image: url("mario-right.png");
+}
+player[dir=left][action=running] {
+    background-image: url("mario-left-run.png");
+}
+player[dir=right][action=running] {
+    background-image: url("mario-right-run.png");
+}
+player[dir=left][action=stopping] {
+    background-image: url("mario-left-stop.png");
+}
+player[dir=right][action=stopping] {
+    background-image: url("mario-right-stop.png");
+}
+player[dir=left][action=jumping] {
+    background-image: url("mario-left-jump.png");
+}
+player[dir=right][action=jumping] {
+    background-image: url("mario-right-jump.png");
+}
