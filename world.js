@@ -139,6 +139,7 @@ const initialiseWorld = () => {
             return (p2.x + p2.w) > p1.x 
                 && (p2.y + p2.h) > p1.y 
                 && p2.x < (p1.x + p1.w)
+                // todo underneath platforms
         })
         if (collision) {
             // put character on top of platform
@@ -147,12 +148,14 @@ const initialiseWorld = () => {
             p.vy = 0
         }
         if (p.vy !== 0) p.action = 'jumping' // or falling
+
+        // stop player from going left past the start...
         if (p.xywh.x < 0) {
             p.xywh.x = 0
             p.vx = 0
         }
 
-        // todo only update if changed...
+        // todo only update if changed... (the actual html changes)
         p.style.top = p.xywh.y + 'px'
         p.style.left = p.xywh.x + 'px'
         if (p.dirx !== 0) p.setAttribute('dir', p.dirx < 0 ? 'left' : 'right')
