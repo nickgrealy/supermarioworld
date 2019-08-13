@@ -1,6 +1,4 @@
 
-
-
 const init = () => {
     // set initial positions
     const world = initialiseWorld()
@@ -13,13 +11,19 @@ const init = () => {
         'ArrowLeft', 'ArrowRight', 'Space'
     ]
 
+    let isPlaying = false
+
     const isKeyDown = {}
     const applyAction = (e, isKeyDown, preventDefaultAndPropagation = true) => {
-        console.debug(`apply action`, { isKeyDown, preventDefaultAndPropagation })
-        if (preventDefaultAndPropagation === true) {
-            e.preventDefault()
-            e.stopPropagation()
+        console.debug(`apply action`, { isKeyDown })
+        // we have to wait until user interacts with the page, before playing music...
+        // https://developers.google.com/web/updates/2017/09/autoplay-policy-changes
+        if (!isPlaying) {
+            isPlaying = true
+            world.audio.background.play()
         }
+        e.preventDefault()
+        e.stopPropagation()
         if (isKeyDown.ArrowRight) player.goRight()
         else if (isKeyDown.ArrowLeft) player.goLeft()
         else player.stop()
@@ -84,6 +88,23 @@ document.addEventListener("DOMContentLoaded", init)
 
 // functions
 
+function sound(src) {
+    this.sound = document.createElement("audio");
+    this.sound.src = src;
+    this.sound.setAttribute("preload", "auto");
+    this.sound.setAttribute("controls", "none");
+    this.sound.style.display = "none";
+    document.body.appendChild(this.sound);
+    this.play = function(){
+      this.sound.play();
+    }
+    this.stop = function(){
+      this.sound.pause();
+    }
+  }
+
+const preloadImage = url => (new Image()).src = url
+
 const initialiseWorld = () => {
 
     const GRAVITY_PXPERSEC = 80
@@ -92,10 +113,21 @@ const initialiseWorld = () => {
     const MAX_VELOCITY = 15
     const FPS = parseInt(1000 / 45) // 60 fps
 
+    // preload sprites
+    'mario-left.png,mario-right.png,mario-left-run.png,mario-right-run.png,mario-left-jump.png,mario-right-jump.png,mario-left-stop.png,mario-right-stop.png'.split(',').forEach(imgUrl => {
+        preloadImage(imgUrl)
+    })
+
     const world = {
         player: null,
-        platforms: []
+        platforms: [],
+        audio: {}
     }
+
+
+    // audio
+    world.audio.jump = new sound("smw_jump.wav")
+    world.audio.background = new sound("background.mp3")
 
     document.querySelectorAll('world player,world platform').forEach(p => {
         // set positions...
@@ -149,7 +181,10 @@ const initialiseWorld = () => {
         p.dirx = 0
     }
     p.jump = () => {
-        if (p.vy === 0) p.vy = 30
+        if (p.vy === 0) {
+            p.vy = 30
+            world.audio.jump.play()
+        }
     }
     p.render = deltams => {
         // apply accel left and right...
