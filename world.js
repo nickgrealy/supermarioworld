@@ -14,9 +14,12 @@ const init = () => {
     ]
 
     const isKeyDown = {}
-    const applyAction = (e, isKeyDown) => {
-        e.preventDefault()
-        e.stopPropagation()
+    const applyAction = (e, isKeyDown, preventDefaultAndPropagation = true) => {
+        console.debug(`apply action`, { isKeyDown, preventDefaultAndPropagation })
+        if (preventDefaultAndPropagation === true) {
+            e.preventDefault()
+            e.stopPropagation()
+        }
         if (isKeyDown.ArrowRight) player.goRight()
         else if (isKeyDown.ArrowLeft) player.goLeft()
         else player.stop()
@@ -45,21 +48,36 @@ const init = () => {
         isKeyDown[name] = value
         applyAction(e, isKeyDown)
     }
+    const touchlistener = (name, value) => e => {
+        isKeyDown[name] = value
+        applyAction(e, isKeyDown)
+    }
+
+    const jump = document.querySelector('jump')
+    const moveleft = document.querySelector('moveleft')
+    const moveright = document.querySelector('moveright')
 
     // mouse events
-    document.querySelector('jump').addEventListener('mousedown', listener('Space', true))
-    document.querySelector('jump').addEventListener('mouseup', listener('Space', false))
-    document.querySelector('moveleft').addEventListener('mousedown', listener('ArrowLeft', true))
-    document.querySelector('moveleft').addEventListener('mouseup', listener('ArrowLeft', false))
-    document.querySelector('moveright').addEventListener('mousedown', listener('ArrowRight', true))
-    document.querySelector('moveright').addEventListener('mouseup', listener('ArrowRight', false))
+    jump.addEventListener('mousedown', listener('Space', true))
+    jump.addEventListener('mouseup', listener('Space', false))
+    moveleft.addEventListener('mousedown', listener('ArrowLeft', true))
+    moveleft.addEventListener('mouseup', listener('ArrowLeft', false))
+    moveright.addEventListener('mousedown', listener('ArrowRight', true))
+    moveright.addEventListener('mouseup', listener('ArrowRight', false))
+
     // touch events
-    document.querySelector('jump').addEventListener('touchstart', listener('Space', true))
-    document.querySelector('jump').addEventListener('touchend', listener('Space', false))
-    document.querySelector('moveleft').addEventListener('touchstart', listener('ArrowLeft', true))
-    document.querySelector('moveleft').addEventListener('touchend', listener('ArrowLeft', false))
-    document.querySelector('moveright').addEventListener('touchstart', listener('ArrowRight', true))
-    document.querySelector('moveright').addEventListener('touchend', listener('ArrowRight', false))
+    jump.addEventListener('touchstart', touchlistener('Space', true))
+    jump.addEventListener('touchend', touchlistener('Space', false))
+    jump.addEventListener('touchmove', touchlistener('Space', true))
+    jump.addEventListener('touchcancel', touchlistener('Space', false))
+    moveleft.addEventListener('touchstart', touchlistener('ArrowLeft', true))
+    moveleft.addEventListener('touchend', touchlistener('ArrowLeft', false))
+    moveleft.addEventListener('touchmove', touchlistener('ArrowLeft', true))
+    moveleft.addEventListener('touchcancel', touchlistener('ArrowLeft', false))
+    moveright.addEventListener('touchstart', touchlistener('ArrowRight', true))
+    moveright.addEventListener('touchcancel', touchlistener('ArrowRight', false))
+    moveright.addEventListener('touchmove', touchlistener('ArrowRight', true))
+    moveright.addEventListener('touchend', touchlistener('ArrowRight', false))
 }
 
 document.addEventListener("DOMContentLoaded", init)
