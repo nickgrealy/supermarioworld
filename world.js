@@ -40,31 +40,26 @@ const init = () => {
             console.log(`Unhandled keypress - ${e.code}`)
         }
     })
-    // add controls listeners
-    document.querySelector('jump').addEventListener('mousedown', e => {
-        isKeyDown.Space = true
+    // util method
+    const listener = (name, value) => e => {
+        isKeyDown[name] = value
         applyAction(e, isKeyDown)
-    })
-    document.querySelector('jump').addEventListener('mouseup', e => {
-        isKeyDown.Space = false
-        applyAction(e, isKeyDown)
-    })
-    document.querySelector('moveleft').addEventListener('mousedown', e => {
-        isKeyDown.ArrowLeft = true
-        applyAction(e, isKeyDown)
-    })
-    document.querySelector('moveleft').addEventListener('mouseup', e => {
-        isKeyDown.ArrowLeft = false
-        applyAction(e, isKeyDown)
-    })
-    document.querySelector('moveright').addEventListener('mousedown', e => {
-        isKeyDown.ArrowRight = true
-        applyAction(e, isKeyDown)
-    })
-    document.querySelector('moveright').addEventListener('mouseup', e => {
-        isKeyDown.ArrowRight = false
-        applyAction(e, isKeyDown)
-    })
+    }
+
+    // mouse events
+    document.querySelector('jump').addEventListener('mousedown', listener('Space', true))
+    document.querySelector('jump').addEventListener('mouseup', listener('Space', false))
+    document.querySelector('moveleft').addEventListener('mousedown', listener('ArrowLeft', true))
+    document.querySelector('moveleft').addEventListener('mouseup', listener('ArrowLeft', false))
+    document.querySelector('moveright').addEventListener('mousedown', listener('ArrowRight', true))
+    document.querySelector('moveright').addEventListener('mouseup', listener('ArrowRight', false))
+    // touch events
+    document.querySelector('jump').addEventListener('touchstart', listener('Space', true))
+    document.querySelector('jump').addEventListener('touchend', listener('Space', false))
+    document.querySelector('moveleft').addEventListener('touchstart', listener('ArrowLeft', true))
+    document.querySelector('moveleft').addEventListener('touchend', listener('ArrowLeft', false))
+    document.querySelector('moveright').addEventListener('touchstart', listener('ArrowRight', true))
+    document.querySelector('moveright').addEventListener('touchend', listener('ArrowRight', false))
 }
 
 document.addEventListener("DOMContentLoaded", init)
