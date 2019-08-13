@@ -21,5 +21,4 @@ Then open http://localhost:3000/
 - support scrolling to follow player
 - better platform collision detection (e.g. below)
 - don't double jump up a platform
-
-
+- disable iphone window pinch zoom (stop touch events?)
