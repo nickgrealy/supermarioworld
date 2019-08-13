@@ -6,18 +6,23 @@
   <title>SMW</title>
   <link href="world.css" rel="stylesheet" type="text/css">
   <script src="world.js" ></script>
-  <link rel="preload" href="mario-left.png">
-  <link rel="preload" href="mario-right.png">
-  <link rel="preload" href="mario-left-run.png">
-  <link rel="preload" href="mario-right-run.png">
-  <link rel="preload" href="mario-left-jump.png">
-  <link rel="preload" href="mario-right-jump.png">
-  <link rel="preload" href="mario-left-stop.png">
-  <link rel="preload" href="mario-right-stop.png">
+  <link rel="prefetch" href="mario-left.png">
+  <link rel="prefetch" href="mario-right.png">
+  <link rel="prefetch" href="mario-left-run.png">
+  <link rel="prefetch" href="mario-right-run.png">
+  <link rel="prefetch" href="mario-left-jump.png">
+  <link rel="prefetch" href="mario-right-jump.png">
+  <link rel="prefetch" href="mario-left-stop.png">
+  <link rel="prefetch" href="mario-right-stop.png">
 </head>
 <body>
 
 <world>
+    <controls>
+      <moveleft>Left</moveleft>
+      <jump>Jump</jump>
+      <moveright>Right</moveright>
+    </controls>
   
     <platform xywh="800,420,200,40" ></platform>
     <platform xywh="1200,500,500,400" ></platform>

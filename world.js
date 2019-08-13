@@ -13,29 +13,57 @@ const init = () => {
         'ArrowLeft', 'ArrowRight', 'Space'
     ]
 
-    // add key listeners
     const isKeyDown = {}
+    const applyAction = (e, isKeyDown) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (isKeyDown.ArrowRight) player.goRight()
+        else if (isKeyDown.ArrowLeft) player.goLeft()
+        else player.stop()
+        // no double jump...
+        if (isKeyDown.Space) player.jump()
+    }
+    // add key listeners
     document.addEventListener('keydown', (e) => {
         if (~CAPTURE_INPUT.indexOf(e.code)) {
-            e.preventDefault()
-            e.stopPropagation()
             isKeyDown[e.code] = true
-            if (isKeyDown.ArrowRight) player.goRight()
-            else if (isKeyDown.ArrowLeft) player.goLeft()
-            else player.stop()
-            // no double jump...
-            if (isKeyDown.Space) player.jump()
+            applyAction(e, isKeyDown)
+        } else {
+            console.log(`Unhandled keypress - ${e.code}`)
         }
     });
     document.addEventListener('keyup', e => {
         if (~CAPTURE_INPUT.indexOf(e.code)) {
-            e.preventDefault()
-            e.stopPropagation()
             isKeyDown[e.code] = false
-            if (isKeyDown.ArrowRight) player.goRight()
-            else if (isKeyDown.ArrowLeft) player.goLeft()
-            else player.stop()
+            applyAction(e, isKeyDown)
+        } else {
+            console.log(`Unhandled keypress - ${e.code}`)
         }
+    })
+    // add controls listeners
+    document.querySelector('jump').addEventListener('mousedown', e => {
+        isKeyDown.Space = true
+        applyAction(e, isKeyDown)
+    })
+    document.querySelector('jump').addEventListener('mouseup', e => {
+        isKeyDown.Space = false
+        applyAction(e, isKeyDown)
+    })
+    document.querySelector('moveleft').addEventListener('mousedown', e => {
+        isKeyDown.ArrowLeft = true
+        applyAction(e, isKeyDown)
+    })
+    document.querySelector('moveleft').addEventListener('mouseup', e => {
+        isKeyDown.ArrowLeft = false
+        applyAction(e, isKeyDown)
+    })
+    document.querySelector('moveright').addEventListener('mousedown', e => {
+        isKeyDown.ArrowRight = true
+        applyAction(e, isKeyDown)
+    })
+    document.querySelector('moveright').addEventListener('mouseup', e => {
+        isKeyDown.ArrowRight = false
+        applyAction(e, isKeyDown)
     })
 }
 

@@ -34,6 +34,36 @@ world {
     background: linear-gradient(to bottom, skyblue, white);
 }
 
+controls {
+    position: absolute;
+    height: 10vh;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+}
+controls moveleft,
+controls moveright,
+controls jump {
+    font-family: Arial, Helvetica, sans-serif;
+    color: rgba(0,0,0,0.5);
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    font-size: 4vh;
+    border: 2px solid rgba(0,0,0,0.5);
+    margin: 1vh;
+    border-radius: 4vh;
+    background-color: rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+controls moveleft:hover,
+controls moveright:hover,
+controls jump:hover {
+    background-color: rgba(0,0,0,0.3);
+}
+
 platform {
     background: linear-gradient(to bottom, #0FE207 10px, #DEAF5F 20px, #DEAF5F);
 }
