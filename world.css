@@ -6,6 +6,26 @@ margin:0;
 overflow: hidden;
 }
 
+world,
+platform,
+player,
+stats {
+    box-sizing: border-box;
+}
+
+stats {
+    border: 1px solid blue;
+    position: fixed;
+    top: 0;
+    right: 0;
+    min-width: 10px;
+    min-height: 10px;
+    background: rgba(0,0,255,0.2);
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    padding: 4px;
+}
+
 world {
     display: block;
     width: 100%; 

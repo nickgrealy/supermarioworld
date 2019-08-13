@@ -15,12 +15,12 @@ const init = () => {
 
     const isKeyDown = {}
     const applyAction = (e, isKeyDown, preventDefaultAndPropagation = true) => {
-        console.debug(`apply action`, { isKeyDown })
+        // console.debug(`apply action`, { isKeyDown })
         // we have to wait until user interacts with the page, before playing music...
         // https://developers.google.com/web/updates/2017/09/autoplay-policy-changes
         if (!isPlaying) {
             isPlaying = true
-            world.audio.background.play()
+            // world.audio.background.play()
         }
         e.preventDefault()
         e.stopPropagation()
@@ -52,10 +52,6 @@ const init = () => {
         isKeyDown[name] = value
         applyAction(e, isKeyDown)
     }
-    const touchlistener = (name, value) => e => {
-        isKeyDown[name] = value
-        applyAction(e, isKeyDown)
-    }
 
     const jump = document.querySelector('jump')
     const moveleft = document.querySelector('moveleft')
@@ -70,18 +66,18 @@ const init = () => {
     moveright.addEventListener('mouseup', listener('ArrowRight', false))
 
     // touch events
-    jump.addEventListener('touchstart', touchlistener('Space', true))
-    jump.addEventListener('touchend', touchlistener('Space', false))
-    jump.addEventListener('touchmove', touchlistener('Space', true))
-    jump.addEventListener('touchcancel', touchlistener('Space', false))
-    moveleft.addEventListener('touchstart', touchlistener('ArrowLeft', true))
-    moveleft.addEventListener('touchend', touchlistener('ArrowLeft', false))
-    moveleft.addEventListener('touchmove', touchlistener('ArrowLeft', true))
-    moveleft.addEventListener('touchcancel', touchlistener('ArrowLeft', false))
-    moveright.addEventListener('touchstart', touchlistener('ArrowRight', true))
-    moveright.addEventListener('touchcancel', touchlistener('ArrowRight', false))
-    moveright.addEventListener('touchmove', touchlistener('ArrowRight', true))
-    moveright.addEventListener('touchend', touchlistener('ArrowRight', false))
+    jump.addEventListener('touchstart', listener('Space', true))
+    jump.addEventListener('touchend', listener('Space', false))
+    jump.addEventListener('touchmove', listener('Space', true))
+    jump.addEventListener('touchcancel', listener('Space', false))
+    moveleft.addEventListener('touchstart', listener('ArrowLeft', true))
+    moveleft.addEventListener('touchend', listener('ArrowLeft', false))
+    moveleft.addEventListener('touchmove', listener('ArrowLeft', true))
+    moveleft.addEventListener('touchcancel', listener('ArrowLeft', false))
+    moveright.addEventListener('touchstart', listener('ArrowRight', true))
+    moveright.addEventListener('touchcancel', listener('ArrowRight', false))
+    moveright.addEventListener('touchmove', listener('ArrowRight', true))
+    moveright.addEventListener('touchend', listener('ArrowRight', false))
 }
 
 document.addEventListener("DOMContentLoaded", init)
@@ -118,12 +114,14 @@ const initialiseWorld = () => {
         preloadImage(imgUrl)
     })
 
+    const stats = document.querySelector('stats')
+
     const world = {
         player: null,
         platforms: [],
-        audio: {}
+        audio: {},
+        setStats: str => stats.innerHTML = str
     }
-
 
     // audio
     world.audio.jump = new sound("smw_jump.wav")
@@ -157,29 +155,13 @@ const initialiseWorld = () => {
     const p = world.player
     // console.log(`direction: "${p.dir}"`)
     // functions to translate X/Y positions by...
-    p.y = px => {
-        p.xywh.y = p.xywh.y - px
-        return p.xywh.y
-    }
-    p.x = px => {
-        p.xywh.x = p.xywh.x + px
-        return p.xywh.x
-    }
-    p.setY = y => {
-        p.xywh.y = y
-    }
-    p.setX = x => {
-        p.xywh.x = x
-    }
-    p.goLeft = () => {
-        p.dirx = -1
-    }
-    p.goRight = () => {
-        p.dirx = 1
-    }
-    p.stop = () => {
-        p.dirx = 0
-    }
+    p.y = px => p.xywh.y = p.xywh.y - px
+    p.x = px => p.xywh.x = p.xywh.x + px
+    p.setY = y => p.xywh.y = y
+    p.setX = x => p.xywh.x = x
+    p.goLeft = () => p.dirx = -1
+    p.goRight = () => p.dirx = 1
+    p.stop = () => p.dirx = 0
     p.jump = () => {
         if (p.vy === 0) {
             p.vy = 30
@@ -190,7 +172,7 @@ const initialiseWorld = () => {
         // apply accel left and right...
         if (p.dirx === 0) {
             // grind to zero if not moving...
-            if (Math.abs(p.vx) < 0.5) {
+            if (Math.abs(p.vx) < 1.8) {
                 p.vx = 0
                 p.action = 'standing'
             }
@@ -211,18 +193,55 @@ const initialiseWorld = () => {
         p.y(p.vy)
         // stop gravity, if you intercept a platform...
         const p2 = p.xywh
-        const collision = world.platforms.find(({xywh: p1}) => {
-            return (p2.x + p2.w) > p1.x 
-                && (p2.y + p2.h) > p1.y 
-                && p2.x < (p1.x + p1.w)
-                // todo underneath platforms
+        world.platforms.forEach(el => {
+            const {xywh: p1} = el
+            
+            // top player 
+            const hdiff = Math.min(p1.x + p1.w, p2.x + p2.w) - Math.max(p1.x, p2.x)
+            const vdiff = Math.min(p1.y + p1.h, p2.y + p2.h) - Math.max(p1.y, p2.y)
+            
+            // if player is overlaps the horizontal and veritcal, then they have collided with box...
+            const collision = hdiff > 0 && vdiff > 0
+            // if collision, push object outside of box (based on center of mass vs primary side collided)
+            if (collision) {
+                console.debug(`collision ${parseInt(hdiff)}, ${parseInt(vdiff)} ${el.innerHTML} vy=${parseInt(p.vy)} vx=${parseInt(p.vx)}`)
+                
+                // collision top or bottom...
+                if (hdiff > vdiff) {
+                    const p2vcenter = p2.y + (p2.h / 2)
+                    const p1vcenter = p1.y + (p1.h / 2)
+                    // if top (and player is descending)...
+                    if (p2vcenter < p1vcenter && p.vy < 0) {
+                        console.debug(`move up ${p2vcenter} ${p1vcenter}`)
+                        p2.y = p1.y - p2.h
+                    }
+                    // else if bottom (and player is ascending)...
+                    else if (p2vcenter > p1vcenter && p.vy > 0) {
+                        console.debug(`move down ${p2vcenter} ${p1vcenter}`)
+                        p2.y = p1.y + p1.h
+                    }
+                    // zero vertical velocity...
+                    p.vy = 0
+                } 
+                // collision left or right...
+                else { 
+                    const p2hcenter = p2.x + (p2.w / 2)
+                    const p1hcenter = p1.x + (p1.w / 2)
+                    // if entering from left and player is travelling right...
+                    if (p2hcenter < p1hcenter && p.vx > 0) {
+                        console.debug(`move left ${p2hcenter} ${p1hcenter}`)
+                        p2.x = p1.x - p2.w
+                    }
+                    // else entering from right and player is travelling left...
+                    else if (p2hcenter > p1hcenter && p.vx < 0) {
+                        console.debug(`move right ${p2hcenter} ${p1hcenter}`)
+                        p2.x = p1.x + p1.w
+                    }
+                    // zero horizontal velocity...
+                    p.vx = 0
+                }
+            }
         })
-        if (collision) {
-            // put character on top of platform
-            p2.y = collision.xywh.y - p2.h
-            // stop vertical acceleration
-            p.vy = 0
-        }
         if (p.vy !== 0) p.action = 'jumping' // or falling
 
         // stop player from going left past the start...
@@ -231,9 +250,24 @@ const initialiseWorld = () => {
             p.vx = 0
         }
 
+        // show stats
+        const { vx, vy } = p
+        const { x,y,w,h } = p.xywh
+        world.setStats(JSON.stringify({
+            vel: { 
+                x: parseInt(vx), 
+                y: parseInt(vy)
+            }, 
+            loc: {
+                x: parseInt(x),
+                y: parseInt(y),
+                w: parseInt(w),
+                h: parseInt(h)
+            } 
+        }))
         // todo only update if changed... (the actual html changes)
-        p.style.top = p.xywh.y + 'px'
-        p.style.left = p.xywh.x + 'px'
+        p.style.top = Math.floor(p.xywh.y) + 'px'
+        p.style.left = Math.floor(p.xywh.x) + 'px'
         if (p.dirx !== 0) p.setAttribute('dir', p.dirx < 0 ? 'left' : 'right')
         p.setAttribute('action', p.action)
     }

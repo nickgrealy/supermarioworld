@@ -19,8 +19,6 @@ Then open http://localhost:3000/
 - make buttons look pressed
 - move controls more friendly position
 - support scrolling to follow player
-- better platform collision detection (e.g. below)
-- don't double jump up a platform
 - disable iphone window pinch zoom (stop touch events?)
 - ensure images are preloaded on mobiles
-- add background music and sound fx
+- animate running
