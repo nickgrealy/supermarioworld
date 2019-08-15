@@ -13,7 +13,11 @@ stats {
     box-sizing: border-box;
 }
 
-stats {
+world:not([debug]) stats {
+    display: none;
+}
+world[debug] stats {
+    display: block;
     border: 1px solid blue;
     position: fixed;
     top: 0;
@@ -24,6 +28,13 @@ stats {
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     padding: 4px;
+}
+world[debug] platform {
+    color: magenta;
+    font-weight: bold;
+}
+world:not([debug]) platform {
+    color: transparent;
 }
 
 world {
@@ -106,7 +117,7 @@ controls jump:hover {
 }
 
 platform {
-    background: linear-gradient(to bottom, #0FE207 10px, #DEAF5F 20px, #DEAF5F);
+    background: linear-gradient(to bottom, #04C806 10px, black 12px, #C79757 0px, #C79757);
 }
 
 player {
@@ -138,4 +149,18 @@ player[dir=left][action=jumping] {
 }
 player[dir=right][action=jumping] {
     background-image: url("mario-right-jump.png");
+}
+
+platform[lava] {
+    border-width: 1px;
+    background: linear-gradient(to bottom, white 2px, yellow 3px, orange 7px, red 10px, red);
+}
+platform[blocks] {
+    border-radius: 0px; 
+    border-width: 1px;
+    background: linear-gradient(315deg, transparent 75%, #d45d55 0)-20px 0,
+    linear-gradient(45deg, transparent 75%, #d45d55 0)-20px 0,
+    linear-gradient(135deg, #a7332b 50%, transparent 0) 0 0,
+    linear-gradient(45deg, #6a201b 50%, #561a16 0) 0 0 #561a16;
+    background-size: 40px 40px;
 }

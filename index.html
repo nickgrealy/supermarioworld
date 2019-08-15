@@ -27,12 +27,11 @@
   <link rel="preload" as="image" href="mario-right-jump.png">
   <link rel="preload" as="image" href="mario-left-stop.png">
   <link rel="preload" as="image" href="mario-right-stop.png">
-  <link rel="preload" as="audio" href="background.mp3">
-  <link rel="preload" as="audio" href="smw_jump.wav">
 </head>
 <body>
-
-<world>
+  
+<!-- <world> -->
+<world debug>
 
     <stats></stats>
 
@@ -42,12 +41,14 @@
       <moveright>Right</moveright>
     </controls>
   
-    <platform xywh="800,350,200,50" >a</platform>
+    <platform xywh="0,350,200,200" toponly>aa</platform>
+    <platform xywh="400,220,200,400 " blocks>ab</platform>
+    <platform xywh="650,600,600,400" lava touch="death">ac</platform>
+    <platform xywh="850,350,200,50" >a</platform>
     <platform xywh="1200,500,500,400" >b</platform>
-    <platform xywh="0,500,700,400" >c</platform>
-    <platform xywh="0,350,200,50" >d</platform>
-    <!-- <platform xywh="400,200,200,300" >e</platform> -->
-    <platform xywh="600,740,700,400" >f</platform>
+    <!-- <platform xywh="675,740,400,400" >f</platform> -->
+    <platform xywh="0,500,700,500" >c</platform>
+    <platform xywh="1600,200,40,300" blocks>g</platform>
 
     <player xywh="100,100,48,84" ></player>
   

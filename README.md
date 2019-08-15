@@ -22,3 +22,4 @@ Then open http://localhost:3000/
 - disable iphone window pinch zoom (stop touch events?)
 - ensure images are preloaded on mobiles
 - animate running
+- add music controls
