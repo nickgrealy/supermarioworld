@@ -23,3 +23,4 @@ Then open http://localhost:3000/
 - ensure images are preloaded on mobiles
 - animate running
 - add music controls
+- too long to render = can pass through walls

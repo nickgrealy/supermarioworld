@@ -111,9 +111,15 @@ const initialiseWorld = () => {
 
     const GRAVITY_PXPERSEC = 80
     const ACCEL_PXPERSEC = 20
+    const PLATFORM_SPEED = 90
     const DECCEL_PXPERSEC = 40
-    const MAX_VELOCITY = 15
+    const JUMP_VELOCITY = 30
+    const MAX_Y_VELOCITY = 30
+    const MAX_X_VELOCITY = 15
     const FPS = parseInt(1000 / 45) // 60 fps
+
+    const SCROLL_DEADZONE_WIDTH = 100
+    const SCROLL_DEADZONE_HEIGHT = 250
 
     // preload sprites
     'mario-left.png,mario-right.png,mario-left-run.png,mario-right-run.png,mario-left-jump.png,mario-right-jump.png,mario-left-stop.png,mario-right-stop.png'.split(',').forEach(imgUrl => {
@@ -122,62 +128,99 @@ const initialiseWorld = () => {
 
     const stats = document.querySelector('stats')
 
+    const deadzone = document.querySelector('scrollDeadZone')
+    deadzone.style.width = SCROLL_DEADZONE_WIDTH + 'px'
+    deadzone.style.height = SCROLL_DEADZONE_HEIGHT + 'px'
+
     const world = {
+        el: document.querySelector('world'),
         player: null,
         platforms: [],
+        enemies: [],
         audio: {},
+        hasFocus: true,
         setStats: str => stats.innerHTML = str
     }
+
+    // check if window has focus...
+    window.onfocus = () => world.hasFocus = true
+    window.onblur = () => world.hasFocus = false
 
     // audio
     world.audio.death = new sound('smb_mariodie.wav')
     world.audio.jump = new sound('smw_jump.wav')
     world.audio.background = new sound('background.mp3', true)
 
-    document.querySelectorAll('world player,world platform').forEach(p => {
+    const initMoveableObject = p => {
+        p.init = () => {
+            p.vx = 0
+            p.vy = 0
+            p.dirx = 0
+            p.action = 'standing'
+            p.setAttribute('dir', 'right')
+        }
+        p.init()
+        p.y = px => p.xywh.y = p.xywh.y - px
+        p.x = px => p.xywh.x = p.xywh.x + px
+        p.setY = y => p.xywh.y = y
+        p.setX = x => p.xywh.x = x
+        p.goLeft = () => p.dirx = -1
+        p.goRight = () => p.dirx = 1
+    }
+
+    // check the bounds of the world...
+    let maxY = 0;
+    let maxX = 0;
+    document.querySelectorAll('player,platform,toad').forEach(p => {
         // set positions...
         p.toponly = p.hasAttribute('toponly')
         p.touch = p.getAttribute('touch')
+        p.moveTo = p.hasAttribute('moveTo') ? parseInt(p.getAttribute('moveTo')) : null
         if (p.hasAttribute('xywh')) {
-            const [x, y, w, h] = p.getAttribute('xywh').split(',').map(x => parseInt(x))
+            let [x, y, w, h] = p.getAttribute('xywh').split(',').map(x => parseInt(x))
             p.xywh = { x, y, w, h }
             p.originalXYWH = { x, y, w, h }
             p.style.left = x + 'px'
             p.style.top = y + 'px'
             p.style.width = w + 'px'
             p.style.height = h + 'px'
+            p.vx = 0
+            p.vy = 0
+            // check world bounds...
+            maxY = Math.max(maxY, y+h)
+            maxX = Math.max(maxX, x+w)
         }
+        console.log(p.tagName)
+        initMoveableObject(p)
 
         if (p.tagName === 'PLAYER') {
             world.player = p
         } else if (p.tagName === 'PLATFORM') {
             world.platforms.push(p)
+        } else if (p.tagName === 'TOAD') {
+            p.vx = 2
+            world.enemies.push(p)
         }
     })
+    world.bounds = { w: maxX + 200, h: maxY + 200}
+    // set world bounds in html...
+    console.debug(`setting world bounds`, world.bounds)
+    document.body.style.width = world.bounds.w + 'px'
+    document.body.style.height = world.bounds.h + 'px'
+    world.el.style.width = world.bounds.w + 'px'
+    world.el.style.height = world.bounds.h + 'px'
+
+
 
     // player
     
     const p = world.player
     // console.log(`direction: "${p.dir}"`)
     // functions to translate X/Y positions by...
-    p.init = () => {
-        p.vx = 0
-        p.vy = 0
-        p.dirx = 0
-        p.action = 'standing'
-        p.setAttribute('dir', 'right')
-    }
-    p.init()
-    p.y = px => p.xywh.y = p.xywh.y - px
-    p.x = px => p.xywh.x = p.xywh.x + px
-    p.setY = y => p.xywh.y = y
-    p.setX = x => p.xywh.x = x
-    p.goLeft = () => p.dirx = -1
-    p.goRight = () => p.dirx = 1
     p.stop = () => p.dirx = 0
     p.jump = () => {
         if (p.vy === 0) {
-            p.vy = 30
+            p.vy = JUMP_VELOCITY
             world.audio.jump.play()
         }
     }
@@ -190,6 +233,9 @@ const initialiseWorld = () => {
         p.init()
     }
     p.render = deltams => {
+
+        const ACTION_DELTA = deltams / 1000
+
         // if no direction is being applied...
         if (p.dirx === 0) {
             // if speed is less really slow, stop character.
@@ -199,7 +245,7 @@ const initialiseWorld = () => {
             }
             // if not falling, and not moving, grind to zero...
             else if (p.vy === 0) {
-                p.vx += DECCEL_PXPERSEC * deltams / 1000 * (p.vx > 0 ? -1 : 1) // deccel in opposite direction
+                p.vx += DECCEL_PXPERSEC * ACTION_DELTA * (p.vx > 0 ? -1 : 1) // deccel in opposite direction
                 p.action = Math.abs(p.vx) > 1 ? 'running' : 'standing'
             }
         }
@@ -207,31 +253,81 @@ const initialiseWorld = () => {
         else {
             // if accelerating in opposite direction, apply DECCEL (which is bigger)
             const sameDirection = p.dirx > 0 && p.vx > 0 || p.dirx < 0 && p.vx < 0
-            p.vx += (sameDirection ? ACCEL_PXPERSEC : DECCEL_PXPERSEC) * deltams / 1000 * p.dirx
+            p.vx += (sameDirection ? ACCEL_PXPERSEC : DECCEL_PXPERSEC) * ACTION_DELTA * p.dirx
             p.action = sameDirection ? 'running' : 'stopping'
-            if (Math.abs(p.vx) > MAX_VELOCITY) {
-                p.vx = MAX_VELOCITY * p.dirx
-            }
+            if (Math.abs(p.vx) > MAX_X_VELOCITY) p.vx = MAX_X_VELOCITY * Math.sign(p.vx)
         }
         p.x(p.vx)
         // apply gravity...
-        p.vy -= GRAVITY_PXPERSEC * deltams / 1000
+        p.vy -= GRAVITY_PXPERSEC * ACTION_DELTA
+        if (Math.abs(p.vy) > MAX_Y_VELOCITY) p.vy = MAX_Y_VELOCITY * Math.sign(p.vy)
         p.y(p.vy)
 
+
         // check for collisions with platform...
+        const checkCollision = (xywh1, xywh2) => {
+            // check if object intercepts (positive number) the vertical or horizontal space of a second object...
+            const hdiff = Math.min(xywh1.x + xywh1.w, xywh2.x + xywh2.w) - Math.max(xywh1.x, xywh2.x)
+            const vdiff = Math.min(xywh1.y + xywh1.h, xywh2.y + xywh2.h) - Math.max(xywh1.y, xywh2.y)
+            
+            // if object overlaps the horizontal and vertical space, then they have collided with the second object...
+            return { 
+                hdiff, 
+                vdiff, 
+                collided: hdiff > 0 && vdiff > 0, 
+                full: vdiff === Math.min(xywh1.h, xywh2.h) && hdiff === Math.min(xywh1.w, xywh2.w),
+                primarilyVerticalCollision: hdiff > vdiff
+            }
+        }
+
+        world.enemies.forEach(enemy => {
+            // console.log('moving enemy', { vx: enemy.vx})
+            enemy.x(enemy.vx)
+
+
+            // if player is overlaps the horizontal and vertical space, then they have collided with box...
+            const { collided, primarilyVerticalCollision } = checkCollision(p.xywh, enemy.xywh)
+            
+            // if collision, push object outside of box (based on center of mass vs primary side collided)
+            if (collided) {
+                
+                // if touch means death, break out of loop...
+                if (enemy.touch === 'death') {
+                    p.death()
+                    // break;
+                }
+            }
+        })
+
+        // move platforms
+        world.platforms.forEach(platform => {
+            const { moveTo, xywh, originalXYWH } = platform
+            if (moveTo) {
+                const { x } = xywh
+                const diffTarget = x - moveTo
+                const diffSource = x - originalXYWH.x
+                if (platform.dirx === 0) { // if not moving, move towards target...
+                    platform.dirx = diffTarget < 0 ? 1 : -1
+                } else if (platform.dirx > 0 && diffTarget >= 0) { // moving right and at the target...
+                    platform.dirx = -1
+                } else if (platform.dirx < 0 && diffSource <= 0) { // moving left and at the source...
+                    platform.dirx = 1
+                }
+                
+                platform.x(PLATFORM_SPEED * ACTION_DELTA * platform.dirx)
+            }
+        })
+
         const p2 = p.xywh
         for (let i = 0; i < world.platforms.length; i++) {
-            const el = world.platforms[i]
-            const {xywh: p1, toponly, touch } = el
-            
-            // check if player intercepts (positive number) the vertical or horizontal space of a platform...
-            const hdiff = Math.min(p1.x + p1.w, p2.x + p2.w) - Math.max(p1.x, p2.x)
-            const vdiff = Math.min(p1.y + p1.h, p2.y + p2.h) - Math.max(p1.y, p2.y)
+            const platform = world.platforms[i]
+            const {xywh: p1, toponly, touch } = platform
             
             // if player is overlaps the horizontal and vertical space, then they have collided with box...
-            const collision = hdiff > 0 && vdiff > 0
+            const { collided, primarilyVerticalCollision } = checkCollision(p.xywh, platform.xywh)
+            
             // if collision, push object outside of box (based on center of mass vs primary side collided)
-            if (collision) {
+            if (collided) {
                 
                 // if touch means death, break out of loop...
                 if (touch === 'death') {
@@ -240,7 +336,7 @@ const initialiseWorld = () => {
                 }
                 
                 // collision top or bottom...
-                if (hdiff > vdiff) {
+                if (primarilyVerticalCollision) {
                     const p2vcenter = p2.y + (p2.h / 2)
                     const p1vcenter = p1.y + (p1.h / 2)
                     // if top (and player is descending)...
@@ -249,6 +345,8 @@ const initialiseWorld = () => {
                         p2.y = p1.y - p2.h
                         // zero vertical velocity...
                         p.vy = 0
+                        // if platform has velocity, also move mario...
+                        if (platform.dirx !== 0) p.x(PLATFORM_SPEED * ACTION_DELTA * platform.dirx)
                     }
                     // else if bottom (and player is ascending) and not "top only"...
                     else if (toponly !== true && p2vcenter > p1vcenter && p.vy > 0) {
@@ -256,6 +354,7 @@ const initialiseWorld = () => {
                         p2.y = p1.y + p1.h
                         // zero vertical velocity...
                         p.vy = 0
+                        
                     }
                 } 
                 // collision left or right (and not "top only")...
@@ -287,9 +386,39 @@ const initialiseWorld = () => {
             p.vx = 0
         }
 
-        // show stats
+        // DO ACTUAL RENDER ON PAGE
+
+        // get player fields...
         const { vx, vy } = p
         const { x,y,w,h } = p.xywh
+
+        // get deadzone position... (deadzone is an area where the player can move, without scrolling the window)
+        var doc = document.documentElement;
+        const outerdeadzoneX = (window.innerWidth - SCROLL_DEADZONE_WIDTH - w) / 2
+        const outerdeadzoneY = (window.innerHeight - SCROLL_DEADZONE_HEIGHT -h) / 2
+        let scrollLeft = (window.pageXOffset || doc.scrollLeft) - (doc.clientLeft || 0);
+        let scrollTop = (window.pageYOffset || doc.scrollTop)  - (doc.clientTop || 0);
+        const deadzone = {
+            x1: scrollLeft + outerdeadzoneX,
+            x2: scrollLeft + outerdeadzoneX + SCROLL_DEADZONE_WIDTH,
+            y1: scrollTop + outerdeadzoneY,
+            y2: scrollTop + outerdeadzoneY + SCROLL_DEADZONE_HEIGHT,
+        };
+
+        // move window along with player...
+        if (x < deadzone.x1) {
+            scrollLeft = x - outerdeadzoneX
+        } else if (x > deadzone.x2) {
+            scrollLeft = x - outerdeadzoneX - SCROLL_DEADZONE_WIDTH
+        }
+        if (y < deadzone.y1) {
+            scrollTop = y - outerdeadzoneY
+        } else if (y > deadzone.y2) {
+            scrollTop = y - outerdeadzoneY - SCROLL_DEADZONE_HEIGHT
+        }
+        window.scrollTo(scrollLeft, scrollTop)
+
+        // show stats
         world.setStats(JSON.stringify({
             vel: { 
                 x: parseInt(vx), 
@@ -300,11 +429,30 @@ const initialiseWorld = () => {
                 y: parseInt(y),
                 w: parseInt(w),
                 h: parseInt(h)
-            } 
+            },
+            scroll: {
+                top: parseInt(scrollTop), 
+                left: parseInt(scrollLeft)
+            }
         }))
+
         // todo only update if changed... (the actual html changes)
-        p.style.top = Math.floor(p.xywh.y) + 'px'
-        p.style.left = Math.floor(p.xywh.x) + 'px'
+        
+        // player
+        p.style.top = Math.floor(y) + 'px'
+        p.style.left = Math.floor(x) + 'px'
+
+        // enemies
+        world.enemies.forEach(platform => {
+            platform.style.top = Math.floor(platform.xywh.y) + 'px'
+            platform.style.left = Math.floor(platform.xywh.x) + 'px'
+        })
+
+        // platforms
+        world.platforms.forEach(platform => {
+            platform.style.top = Math.floor(platform.xywh.y) + 'px'
+            platform.style.left = Math.floor(platform.xywh.x) + 'px'
+        })
         if (p.dirx !== 0) p.setAttribute('dir', p.dirx < 0 ? 'left' : 'right')
         p.setAttribute('action', p.action)
     }
@@ -316,7 +464,7 @@ const initialiseWorld = () => {
         const interval = setInterval(() => {
             try {
             let inst = new Date().getTime()
-            world.player.render(inst - last)
+            if (world.hasFocus) world.player.render(inst - last)
             last = inst
         } catch (err) {
             console.error(err)

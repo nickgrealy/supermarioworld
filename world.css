@@ -9,8 +9,28 @@ overflow: hidden;
 world,
 platform,
 player,
-stats {
+toad,
+stats,
+scrollDeadZone {
+    display: block;
     box-sizing: border-box;
+}
+
+world[debug] scrollDeadZone {
+    border: 2px solid red;
+}
+
+world[debug] fixed {
+    border: 3px solid magenta;
+    position:fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 world:not([debug]) stats {
@@ -38,9 +58,8 @@ world:not([debug]) platform {
 }
 
 world {
-    display: block;
-    width: 100%; 
-    height: 100%;
+    min-height: 100%;
+    min-width: 100%;
 }
 
 [xywh] {
@@ -116,10 +135,6 @@ controls jump:hover {
     background-color: rgba(0,0,0,0.3);
 }
 
-platform {
-    background: linear-gradient(to bottom, #04C806 10px, black 12px, #C79757 0px, #C79757);
-}
-
 player {
     box-sizing: border-box;
     background: transparent;
@@ -151,6 +166,13 @@ player[dir=right][action=jumping] {
     background-image: url("mario-right-jump.png");
 }
 
+
+platform {
+    background: linear-gradient(to bottom, #04C806 10px, black 12px, #C79757 0px, #C79757);
+}
+platform[grass] {
+    background: linear-gradient(to bottom, #04C806 10px, black 12px, #C79757 0px, #C79757);
+}
 platform[lava] {
     border-width: 1px;
     background: linear-gradient(to bottom, white 2px, yellow 3px, orange 7px, red 10px, red);
@@ -163,4 +185,24 @@ platform[blocks] {
     linear-gradient(135deg, #a7332b 50%, transparent 0) 0 0,
     linear-gradient(45deg, #6a201b 50%, #561a16 0) 0 0 #561a16;
     background-size: 40px 40px;
+}
+platform[wood] {
+    border-color: #753;
+    background: linear-gradient(45deg, #dca 12%, transparent 0, transparent 88%, #dca 0),
+    linear-gradient(135deg, transparent 37%, #a85 0, #a85 63%, transparent 0),
+    linear-gradient(45deg, transparent 37%, #dca 0, #dca 63%, transparent 0) #753;
+    background-size: 25px 25px;
+}
+platform[goal] {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+platform[goal] img {
+    width: 200px;
+}
+
+toad {
+    background: magenta;
 }
